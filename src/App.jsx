@@ -42,7 +42,7 @@ export default function App() {
   }, [])
 
   return (
-    <BrowserRouter basename="/terrademaria">
+    <BrowserRouter basename="/sistema-interno">
       <Routes>
         <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
         <Route path="/" element={
