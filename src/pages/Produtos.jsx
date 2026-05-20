@@ -109,17 +109,20 @@ function SecaoVitrine({ form, setForm }) {
     if (!form.slug) { setUploadMsg({ text: 'Defina o slug antes de subir fotos', type: 'danger' }); return }
     setUploadando(true); setUploadMsg(null)
     const novasFotos = [...(form.imagens_publicas || [])]
+    let hasError = false
     for (const file of files) {
       const ext = file.name.split('.').pop()
       const path = `${form.slug}/foto-${Date.now()}.${ext}`
       const { error } = await supabase.storage.from('produtos-publicos').upload(path, file, { upsert: true })
-      if (error) { setUploadMsg({ text: 'Erro: ' + error.message, type: 'danger' }); break }
+      if (error) { setUploadMsg({ text: 'Erro ao subir foto: ' + error.message, type: 'danger' }); hasError = true; break }
       novasFotos.push(path)
     }
     setForm(f => ({ ...f, imagens_publicas: novasFotos }))
     setUploadando(false)
-    setUploadMsg({ text: `${files.length} foto(s) enviada(s)!`, type: 'success' })
-    setTimeout(() => setUploadMsg(null), 3000)
+    if (!hasError) {
+      setUploadMsg({ text: `${novasFotos.length} foto(s) enviada(s)!`, type: 'success' })
+      setTimeout(() => setUploadMsg(null), 3000)
+    }
     fileRef.current.value = ''
   }
 
