@@ -32,6 +32,7 @@ const emptyForm = {
   estoque_atual: '', estoque_minimo: '5',
   publicar_site: false, slug: '', descricao_publica: '',
   categoria_site: 'Terços', ordem_site: 999, destaque: false, imagens_publicas: [],
+  preco_promocional: '', promocao_horas: 24, promocao_ate: null, rotacao_automatica: false,
 }
 
 const emptyPrec = { embalagem: EMBALAGEM_PADRAO, outros: 0, markup: 100, taxaCartao: 0, modoTaxa: 'pix' }
@@ -179,6 +180,51 @@ function SecaoVitrine({ form, setForm }) {
               <span style={{ fontSize: 13, fontWeight: 600 }}>⭐ Produto em destaque (aparece na home)</span>
             </label>
           </div>
+
+          {/* Promoção */}
+          <div style={{ background: 'var(--bege)', borderRadius: 10, border: '1.5px solid var(--bege-dark)', padding: '14px 16px', marginBottom: 12 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--dourado-dark)', marginBottom: 12 }}>🏷️ Promoção</p>
+            <div className="grid-2" style={{ marginBottom: 8 }}>
+              <div>
+                <label style={{ fontSize: 11, color: 'var(--texto-leve)', fontWeight: 600, display: 'block', marginBottom: 4 }}>PREÇO PROMOCIONAL (R$)</label>
+                <input className="form-input" style={{ margin: 0 }} type="number" step="0.01" min="0"
+                  value={form.preco_promocional}
+                  onChange={e => setForm(f => ({ ...f, preco_promocional: e.target.value }))}
+                  placeholder="Ex: 10,00" />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: 'var(--texto-leve)', fontWeight: 600, display: 'block', marginBottom: 4 }}>DURAÇÃO</label>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[24, 48, 72].map(h => (
+                    <button key={h} type="button"
+                      onClick={() => setForm(f => ({ ...f, promocao_horas: h }))}
+                      style={{ flex: 1, padding: '8px 4px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                        background: form.promocao_horas === h ? 'var(--dourado)' : 'var(--branco)',
+                        color: form.promocao_horas === h ? 'white' : 'var(--texto-leve)',
+                        border: '1px solid', borderColor: form.promocao_horas === h ? 'var(--dourado)' : 'var(--bege-dark)',
+                        cursor: 'pointer' }}>{h}h</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            {form.promocao_ate && new Date(form.promocao_ate) > new Date() && (
+              <p style={{ fontSize: 11, color: 'var(--success)', marginBottom: 8 }}>
+                ✅ Promoção ativa até {new Date(form.promocao_ate).toLocaleString('pt-BR')}
+              </p>
+            )}
+            {form.preco_promocional && (
+              <p style={{ fontSize: 11, color: 'var(--texto-leve)' }}>
+                Ao salvar, promoção inicia agora e dura {form.promocao_horas}h.
+                {form.preco_venda && ` De R$ ${Number(form.preco_venda).toFixed(2).replace('.', ',')} por R$ ${Number(form.preco_promocional).toFixed(2).replace('.', ',')}.`}
+              </p>
+            )}
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginTop: 10 }}>
+              <input type="checkbox" checked={form.rotacao_automatica}
+                onChange={e => setForm(f => ({ ...f, rotacao_automatica: e.target.checked }))}
+                style={{ width: 16, height: 16, accentColor: 'var(--dourado)' }} />
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--texto-leve)' }}>🔄 Incluir na rotação automática de promoções</span>
+            </label>
+          </div>
           <div className="form-group">
             <label className="form-label">Fotos do produto</label>
             {form.imagens_publicas?.length > 0 && (
@@ -248,6 +294,7 @@ export default function Produtos() {
         publicar_site: produto.publicar_site || false, slug: produto.slug || '',
         descricao_publica: produto.descricao_publica || '', categoria_site: produto.categoria_site || 'Terços',
         ordem_site: produto.ordem_site || 999, destaque: produto.destaque || false,
+        preco_promocional: produto.preco_promocional || '', promocao_horas: 24, promocao_ate: produto.promocao_ate || null, rotacao_automatica: produto.rotacao_automatica || false,
         imagens_publicas: produto.imagens_publicas || [],
       })
     } else { setEditando(null); setForm(emptyForm) }
@@ -268,6 +315,9 @@ export default function Produtos() {
       publicar_site: form.publicar_site, slug: form.slug || null,
       descricao_publica: form.descricao_publica || null, categoria_site: form.categoria_site || null,
       ordem_site: Number(form.ordem_site) || 999, destaque: form.destaque,
+      preco_promocional: form.preco_promocional ? Number(form.preco_promocional) : null,
+      promocao_ate: form.preco_promocional && form.promocao_horas ? new Date(Date.now() + form.promocao_horas * 3600000).toISOString() : null,
+      rotacao_automatica: form.rotacao_automatica,
       imagens_publicas: form.imagens_publicas || [],
     }
     let error
